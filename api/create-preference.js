@@ -20,9 +20,9 @@ module.exports = async (req, res) => {
         }
       ],
       back_urls: {
-        success: "https://SEU_USUARIO.github.io/SEU_REPOSITORIO/sucesso.html",
-        failure: "https://SEU_USUARIO.github.io/SEU_REPOSITORIO/falha.html",
-        pending: "https://SEU_USUARIO.github.io/SEU_REPOSITORIO/pendente.html"
+        success: "https://luizdecaxtro.github.io/SEU_REPOSITORIO/sucesso.html",
+        failure: "https://luizdecaxtro.github.io/SEU_REPOSITORIO/falha.html",
+        pending: "https://luizdecaxtro.github.io/SEU_REPOSITORIO/pendente.html"
       },
       auto_return: "approved"
     };
