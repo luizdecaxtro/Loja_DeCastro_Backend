@@ -1,0 +1,13 @@
+{
+  "name": "loja-decastro-backend",
+  "version": "1.0.0",
+  "description": "Backend da Loja DeCastro com integração MercadoPago",
+  "main": "index.js",
+  "scripts": {
+    "start": "node api/create-preference.js"
+  },
+  "dependencies": {
+    "mercadopago": "^1.5.16",
+    "express": "^4.18.2"
+  }
+}
