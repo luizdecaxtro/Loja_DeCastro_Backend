@@ -45,7 +45,7 @@ const upload = multer({ storage: storage });
 // O Render SÓ PRECISA servir os uploads.
 
 const uploadsPath = path.join(__dirname, 'uploads');
-app.use('uploads', express.static(uploadsPath)); // Mapeia /uploads para a pasta física
+app.use('/uploads', express.static(uploadsPath)); // Mapeia /uploads para a pasta física
 
 // --- ROTAS DA API ---
 // (As rotas de produtos, contatos e sobre permanecem INALTERADAS, pois estão corretas)
@@ -229,5 +229,6 @@ app.listen(PORT, () => {
     console.log(`URL Base da API: /api/`); 
 
 });
+
 
 
