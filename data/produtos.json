@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1757964614555,
+    "nome": "O Pentateuco",
+    "preco": 8,
+    "descricao": "Livro O Pentateuco,,,,,",
+    "imagem": "/uploads/1757964614542-Capa_de_livro_Pentateuco_frente.jpg"
+  },
+  {
+    "id": 1757964670121,
+    "nome": "Os Caminhos do Coração",
+    "preco": 5,
+    "descricao": "Livro Os Caminhos do Coração",
+    "imagem": "/uploads/1757964670118-Capa_1_JPG.jpg"
+  },
+  {
+    "id": 1757964753365,
+    "nome": "Empreendedorismo Feminino",
+    "preco": 7,
+    "descricao": "Livro Empreendedorismo Feminino ... ",
+    "imagem": "/uploads/1757964753361-Capa-Frente.jpg"
+  },
+  {
+    "id": 1758042167855,
+    "nome": "O Poder da Inteligência Artificial",
+    "preco": 2.55,
+    "descricao": "O Livro que fala sobre IA",
+    "imagem": "/uploads/1758042313300-Capa do livro - O poder da inteligÃªncia Artificial__Simples.jpg"
+  }
+]
