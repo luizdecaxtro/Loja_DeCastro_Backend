@@ -49,7 +49,9 @@ app.use('/uploads', express.static(uploadsPath)); // Mapeia /uploads para a past
 
 // --- ROTAS DA API ---
 // (As rotas de produtos, contatos e sobre permanecem INALTERADAS, pois estão corretas)
+
 app.use(express.static('public')); // <--- ESTA É A LINHA QUE FALTAVA
+
 // Rotas de Produtos (GET, POST, PUT, DELETE)
 app.get('/api/produtos', async (req, res) => {
     try {
@@ -227,3 +229,4 @@ app.listen(PORT, () => {
     console.log(`URL Base da API: /api/`); 
 
 });
+
