@@ -65,6 +65,10 @@ app.get('/api/produtos', async (req, res) => {
 
 app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
     try {
+        console.log('Recebendo requisição para adicionar produto...');
+        console.log('Corpo da requisição:', req.body);
+        console.log('Arquivo recebido:', req.file);
+
         let produtos = [];
         try {
             const data = await fs.readFile(produtosFilePath, 'utf8');
