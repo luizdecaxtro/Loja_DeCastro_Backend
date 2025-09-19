@@ -30,7 +30,10 @@ const sobreFilePath = path.join(__dirname, 'data', 'sobre.json');
 // CONFIGURAÇÃO DO MULTER
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, 'uploads/'));
+        // Assegure-se de que a pasta 'uploads' existe antes de tentar salvar
+        fs.mkdir(path.join(__dirname, 'uploads'), { recursive: true }).then(() => {
+            cb(null, path.join(__dirname, 'uploads/'));
+        });
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
@@ -62,7 +65,18 @@ app.get('/api/produtos', async (req, res) => {
 
 app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
     try {
-        const produtos = JSON.parse(await fs.readFile(produtosFilePath, 'utf8'));
+        let produtos = [];
+        try {
+            const data = await fs.readFile(produtosFilePath, 'utf8');
+            produtos = JSON.parse(data);
+        } catch (readError) {
+            if (readError.code === 'ENOENT') {
+                console.log('Arquivo de produtos não encontrado. Criando um novo.');
+            } else {
+                throw readError;
+            }
+        }
+        
         const { nome, preco, descricao } = req.body;
         const novoProduto = {
             id: Date.now(),
