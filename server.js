@@ -1,19 +1,16 @@
-// Adicione estes três imports se não estiverem lá
+const express = require('express');
+const cors = require('cors');
+const path = require('path'); // Necessário apenas para o path.join
+const { Produto, Contato, sequelize } = require('./database'); // Importa os modelos e a instância Sequelize
+
+// --- CLOUDINARY E MULTER CONFIGURAÇÃO ---
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
-// imports de dependências
-const express = require('express');
-const app = express();
-const cors = require('cors');
-const { Produto, Contato } = require('./database'); // Importa os modelos do Sequelize
 
-// Imports de dados
-const { Produto, Contato } = require('./database'); // CRÍTICO: Importar os modelos Sequelize
-
-// Configuração do Cloudinary (Usando as variáveis de ambiente do Render)
+// Configuração do Cloudinary (Usa variáveis de ambiente do Render)
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME, // Ex: dkwvtzu9i
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
@@ -22,37 +19,46 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'lojacastro', // Nome da pasta
-        format: async (req, file) => 'jpg', 
+        folder: 'lojacastro', // Pasta no Cloudinary
+        format: async (req, file) => 'jpg',
         public_id: (req, file) => Date.now() + '-' + file.originalname,
     },
 });
 
 const upload = multer({ storage: storage });
 
-// CONFIGURAÇÃO DO MULTER
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, 'uploads/'));
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    }
-});
-const upload = multer({ storage: storage });
+// --- CONFIGURAÇÃO DO SERVIDOR ---
+const app = express();
+// Usa a porta do Render ou 3000 localmente
+const PORT = process.env.PORT || 3000;
 
-// ARQUIVOS ESTÁTICOS
-// Esta linha é crucial para servir as imagens enviadas pelo usuário na pasta 'uploads'
-// Ex: Se o caminho da imagem no JSON for "/uploads/minha-foto.jpg", o servidor irá procurar em "uploads/minha-foto.jpg".
-const uploadsPath = path.join(__dirname, 'uploads');
-app.use('/uploads', express.static(uploadsPath)); // Mapeia /uploads para a pasta física
+// Middleware
+app.use(cors()); // Permite requisições do seu Frontend
+app.use(express.json()); // Processa JSON no corpo da requisição
+app.use(express.urlencoded({ extended: true })); // Processa dados de formulário
+
+// --- ARQUIVOS ESTÁTICOS DO FRONTEND ---
+// Esta linha é crítica para servir o seu Frontend (index.html, produtos.html, etc.)
+// Assumindo que a pasta Frontend está na raiz do seu servidor de Backend (NÃO RECOMENDADO, MAS FUNCIONA)
+// Se você está servindo o Frontend de outro lugar, você pode remover ou comentar esta linha.
+const frontendPath = path.join(__dirname, 'public'); 
+app.use(express.static(frontendPath));
+
 
 // --- ROTAS DA API ---
 
+// 1. Rota GET para Produtos (Listagem)
+app.get('/api/produtos', async (req, res) => {
+    try {
+        const produtos = await Produto.findAll(); // Busca todos os produtos no PostgreSQL
+        res.json(produtos);
+    } catch (error) {
+        console.error("Erro ao listar produtos:", error);
+        res.status(500).send({ message: "Erro ao carregar os produtos." });
+    }
+});
 
-
-
-// Rota para cadastrar novo produto
+// 2. Rota POST para Produtos (Cadastro com Cloudinary/Sequelize)
 app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
     try {
         if (!req.file) {
@@ -62,67 +68,28 @@ app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
         const { nome, preco, descricao } = req.body;
         const imagemUrl = req.file.path; // URL do Cloudinary
 
-        // CRÍTICO: Salva no PostgreSQL
+        // Salva os dados no PostgreSQL
         const novoProduto = await Produto.create({
             nome,
             preco: parseFloat(preco),
             descricao,
-            imagem: imagemUrl 
+            imagem: imagemUrl // Salva a URL completa
         });
 
         res.status(201).json(novoProduto);
     } catch (error) {
         console.error("Erro ao cadastrar produto (Cloudinary/Sequelize):", error);
-        res.status(500).send({ message: "Erro interno ao salvar o produto." });
+        // Retorna o erro de salvamento
+        res.status(500).send({ message: "Erro ao salvar o produto." });
     }
 });
 
-app.put('/api/produtos/:id', upload.single('imagem'), async (req, res) => {
-    try {
-        const produtos = JSON.parse(await fs.readFile(produtosFilePath, 'utf8'));
-        const { nome, preco, descricao } = req.body;
-        const id = parseInt(req.params.id);
-        const produtoIndex = produtos.findIndex(p => p.id === id);
-        if (produtoIndex === -1) {
-            return res.status(404).json({ message: 'Produto não encontrado.' });
-        }
-        const produtoAtualizado = produtos[produtoIndex];
-        produtoAtualizado.nome = nome;
-        produtoAtualizado.preco = parseFloat(preco);
-        produtoAtualizado.descricao = descricao;
-        if (req.file) {
-            produtoAtualizado.imagem = `/uploads/${req.file.filename}`;
-        }
-        await fs.writeFile(produtosFilePath, JSON.stringify(produtos, null, 2));
-        res.status(200).json(produtoAtualizado);
-    } catch (error) {
-        console.error('Erro ao atualizar produto:', error);
-        res.status(500).json({ message: 'Erro ao atualizar o produto.' });
-    }
-});
-
-app.delete('/api/produtos/:id', async (req, res) => {
-    try {
-        const produtos = JSON.parse(await fs.readFile(produtosFilePath, 'utf8'));
-        const idParaExcluir = parseInt(req.params.id);
-        const produtosFiltrados = produtos.filter(p => p.id !== idParaExcluir);
-        if (produtos.length === produtosFiltrados.length) {
-            return res.status(404).json({ message: 'Produto não encontrado.' });
-        }
-        await fs.writeFile(produtosFilePath, JSON.stringify(produtosFiltrados, null, 2));
-        res.status(204).send();
-    } catch (error) {
-        console.error('Erro ao excluir produto:', error);
-        res.status(500).json({ message: 'Erro ao excluir o produto.' });
-    }
-});
-
-// Rota para salvar um novo contato
+// 3. Rota POST para Contatos (Cadastro com Sequelize)
 app.post('/api/contatos', async (req, res) => {
     try {
         const { nome, email, telefone, mensagem } = req.body;
         
-        // CRÍTICO: Salva no PostgreSQL
+        // Salva os dados no PostgreSQL
         const novoContato = await Contato.create({
             nome,
             email,
@@ -130,84 +97,18 @@ app.post('/api/contatos', async (req, res) => {
             mensagem
         });
 
-        res.status(201).json(novoContato);
+        // Retorna a mensagem de sucesso
+        res.status(201).json({ message: 'Mensagem enviada com sucesso!', contato: novoContato });
+
     } catch (error) {
         console.error("Erro ao salvar contato:", error);
-        res.status(500).send({ message: "Erro interno ao salvar o contato." });
+        // Retorna o erro de conexão/salvamento
+        res.status(500).send({ message: "Houve um erro de conexão. Por favor, verifique se o servidor está ativo." });
     }
 });
 
-// Rota de Contatos (POST) - A ROTA CORRETA E COMPATÍVEL
-app.post('/api/contatos', async (req, res) => {
-    try {
-        const dadosRecebidos = req.body;
-        
-        // 1. VALIDAÇÃO AJUSTADA: Nome, Email e Mensagem são obrigatórios. (Assunto não é)
-        if (!dadosRecebidos.nome || !dadosRecebidos.email || !dadosRecebidos.mensagem) {
-            return res.status(400).json({ message: 'Nome, Email e Mensagem são obrigatórios.' });
-        }
-
-        let contatos = [];
-        try {
-            const data = await fs.readFile(contatosFilePath, 'utf8');
-            contatos = JSON.parse(data);
-        } catch (readError) {
-            // Se o arquivo não existir ou estiver vazio/corrompido, inicia como array vazio.
-            contatos = [];
-        }
-
-        // 2. ID MAIS ROBUSTO: Usando timestamp (Date.now())
-        const contatoParaSalvar = {
-            id: Date.now(), 
-            nome: dadosRecebidos.nome,
-            email: dadosRecebidos.email,
-            assunto: dadosRecebidos.assunto || 'Sem Assunto', // Inclui Assunto
-            mensagem: dadosRecebidos.mensagem,
-            dataEnvio: new Date().toISOString()
-        };
-        
-        contatos.push(contatoParaSalvar);
-
-        await fs.writeFile(contatosFilePath, JSON.stringify(contatos, null, 2));
-
-        console.log('Mensagem salva com sucesso:', contatoParaSalvar);
-        res.status(201).json({ message: 'Mensagem enviada com sucesso!', contato: contatoParaSalvar });
-
-    } catch (error) {
-        console.error('ERRO INTERNO DO SERVIDOR AO SALVAR CONTATO:', error);
-        res.status(500).json({ message: 'Erro ao salvar a mensagem.', error: error.message });
-    }
-});
-
-// Rotas da API da página "Sobre"
-app.get('/api/sobre', async (req, res) => {
-    try {
-        const data = await fs.readFile(sobreFilePath, 'utf8');
-        res.json(JSON.parse(data));
-    } catch (error) {
-        console.error('Erro ao carregar o conteúdo da página Sobre:', error);
-        if (error.code === 'ENOENT') {
-            return res.json({});
-        }
-        res.status(500).json({ error: 'Erro ao carregar o conteúdo.' });
-    }
-});
-
-app.post('/api/sobre', async (req, res) => {
-    try {
-        await fs.writeFile(sobreFilePath, JSON.stringify(req.body, null, 2));
-        res.status(200).json({ message: 'Conteúdo salvo com sucesso!' });
-    } catch (error) {
-        console.error('Erro ao salvar o conteúdo da página Sobre:', error);
-        res.status(500).json({ message: 'Erro ao salvar o conteúdo.' });
-    }
-});
-
-// Inicia o servidor
+// --- INICIA O SERVIDOR ---
+// A sincronização do banco de dados (sequelize.sync) já está no database.js
 app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
-    console.log(`URL Base da API: /api/`); 
-
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
-
-
