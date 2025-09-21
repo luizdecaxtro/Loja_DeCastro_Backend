@@ -101,11 +101,13 @@ app.post('/api/contatos', async (req, res) => {
         // Retorna a mensagem de sucesso
         res.status(201).json({ message: 'Mensagem enviada com sucesso!', contato: novoContato });
 
+   // ... (código de salvamento de contato)
     } catch (error) {
-        console.error("Erro ao salvar contato:", error);
-        // Retorna o erro de conexão/salvamento
-        res.status(500).send({ message: "Houve um erro de conexão. Por favor, verifique se o servidor está ativo." });
+        console.error("ERRO CRÍTICO NA ROTA DE CONTATO:", error);
+        // Mude a mensagem para uma única:
+        res.status(500).send({ message: "ERRO DE CONTATO: VERIFIQUE O LOG DO RENDER" });
     }
+
 });
 
 // --- INICIA O SERVIDOR ---
@@ -113,5 +115,6 @@ app.post('/api/contatos', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
+
 
 
