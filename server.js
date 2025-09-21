@@ -49,37 +49,28 @@ app.use('/uploads', express.static(uploadsPath)); // Mapeia /uploads para a past
 
 // --- ROTAS DA API ---
 
-// Rotas de Produtos (GET, POST, PUT, DELETE)
-app.get('/api/produtos', async (req, res) => {
-    try {
-        const data = await fs.readFile(produtosFilePath, 'utf8');
-        res.json(JSON.parse(data));
-    } catch (error) {
-        console.error('Erro ao ler o arquivo de produtos:', error);
-        if (error.code === 'ENOENT') {
-            return res.json([]);
-        }
-        res.status(500).json({ error: 'Erro ao carregar a lista de produtos' });
-    }
-});
 
+// Rota para cadastrar novo produto
 app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
     try {
-        const produtos = JSON.parse(await fs.readFile(produtosFilePath, 'utf8'));
+        if (!req.file) {
+            return res.status(400).send({ message: "É necessário enviar um arquivo de imagem." });
+        }
+
         const { nome, preco, descricao } = req.body;
-        const novoProduto = {
-            id: Date.now(),
-            nome: nome,
+        const imagemUrl = req.file.path; // URL do Cloudinary
+
+        const novoProduto = await Produto.create({
+            nome,
             preco: parseFloat(preco),
-            descricao: descricao,
-            imagem: req.file ? `/uploads/${req.file.filename}` : null
-        };
-        produtos.push(novoProduto);
-        await fs.writeFile(produtosFilePath, JSON.stringify(produtos, null, 2));
+            descricao,
+            imagem: imagemUrl // SALVA A URL COMPLETA
+        });
+
         res.status(201).json(novoProduto);
     } catch (error) {
-        console.error('Erro ao adicionar produto:', error);
-        res.status(500).json({ message: 'Erro ao adicionar o produto.' });
+        console.error("Erro ao cadastrar produto (Cloudinary/Sequelize):", error);
+        res.status(500).send({ message: "Erro interno ao salvar o produto." });
     }
 });
 
@@ -137,17 +128,22 @@ app.delete('/api/produtos/:id', async (req, res) => {
     }
 });
 
-// Rotas de Contatos (GET)
-app.get('/api/contatos', async (req, res) => {
+// Rota para salvar um novo contato
+app.post('/api/contatos', async (req, res) => {
     try {
-        const data = await fs.readFile(contatosFilePath, 'utf8');
-        res.json(JSON.parse(data));
+        const { nome, email, telefone, mensagem } = req.body;
+        
+        const novoContato = await Contato.create({
+            nome,
+            email,
+            telefone,
+            mensagem
+        });
+
+        res.status(201).json(novoContato);
     } catch (error) {
-        console.error('Erro ao ler o arquivo de contatos:', error);
-        if (error.code === 'ENOENT') {
-            return res.json([]);
-        }
-        res.status(500).json({ error: 'Erro ao carregar as mensagens' });
+        console.error("Erro ao salvar contato:", error);
+        res.status(500).send({ message: "Erro interno ao salvar o contato." });
     }
 });
 
@@ -223,3 +219,4 @@ app.listen(PORT, () => {
     console.log(`URL Base da API: /api/`); 
 
 });
+
