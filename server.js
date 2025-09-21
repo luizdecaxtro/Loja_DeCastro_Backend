@@ -1,19 +1,19 @@
-// imports necessários
+// imports de dependências
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const { Produto, Contato } = require('./database'); // **IMPORTA OS MODELOS CORRETOS**
-const multer = require('multer');
+const { Produto, Contato } = require('./database'); // Importa os modelos do Sequelize
 
 // Imports do Cloudinary
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const multer = require('multer');
 
 // ... (Restante do setup)
 
-// Configuração do Cloudinary (Pega as Variaveis de Ambiente do Render)
+// Configuração do Cloudinary (Usa variáveis de ambiente do Render)
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME, // Ex: dkwvtzu9i
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
@@ -22,8 +22,8 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'lojacastro', // Pasta no Cloudinary
-        format: async (req, file) => 'jpg',
+        folder: 'lojadecastro', // Pasta no Cloudinary
+        format: async (req, file) => 'jpg', 
         public_id: (req, file) => Date.now() + '-' + file.originalname,
     },
 });
@@ -64,10 +64,10 @@ app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
             nome,
             preco: parseFloat(preco),
             descricao,
-            imagem: imagemUrl // SALVA A URL COMPLETA
+            imagem: imagemUrl 
         });
 
-        res.status(201).json(novoProduto);
+        res.status(201).json(novoProduto); // Retorna sucesso
     } catch (error) {
         console.error("Erro ao cadastrar produto (Cloudinary/Sequelize):", error);
         res.status(500).send({ message: "Erro interno ao salvar o produto." });
@@ -219,4 +219,5 @@ app.listen(PORT, () => {
     console.log(`URL Base da API: /api/`); 
 
 });
+
 
