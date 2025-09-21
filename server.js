@@ -1,31 +1,34 @@
+// imports necessários
 const express = require('express');
-const fs = require('fs').promises;
-const path = require('path');
+const app = express();
 const cors = require('cors');
+const { Produto, Contato } = require('./database'); // **IMPORTA OS MODELOS CORRETOS**
 const multer = require('multer');
 
-const app = express();
-// Esta linha é crucial para servir as imagens pré-existentes na pasta 'public'
-// Ex: Se o caminho da imagem no JSON for "/produto1.jpg", o servidor irá procurar em "public/produto1.jpg".
-app.use(express.static('public')); 
-const PORT = process.env.PORT || 3000;
+// Imports do Cloudinary
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// MIDDLEWARES
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ... (Restante do setup)
 
-// ADAPTAÇÃO PARA PRODUÇÃO: Configuração de CORS
-app.use(cors({
-    origin: '*', 
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-}));
+// Configuração do Cloudinary (Pega as Variaveis de Ambiente do Render)
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-// CONFIGURAÇÃO DE CAMINHOS
-const dataDir = path.join(__dirname, 'data');
-const contatosFilePath = path.join(dataDir, 'contatos.json');
-const produtosFilePath = path.join(dataDir, 'produtos.json');
-const sobreFilePath = path.join(__dirname, 'data', 'sobre.json');
+// Configuração do Multer para usar o Cloudinary
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'lojacastro', // Pasta no Cloudinary
+        format: async (req, file) => 'jpg',
+        public_id: (req, file) => Date.now() + '-' + file.originalname,
+    },
+});
+
+const upload = multer({ storage: storage });
 
 // CONFIGURAÇÃO DO MULTER
 const storage = multer.diskStorage({
@@ -218,4 +221,5 @@ app.post('/api/sobre', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
     console.log(`URL Base da API: /api/`); 
+
 });
