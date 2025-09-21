@@ -44,7 +44,6 @@ app.use(express.urlencoded({ extended: true })); // Processa dados de formulári
 const frontendPath = path.join(__dirname, 'public'); 
 app.use(express.static(frontendPath));
 
-
 // --- ROTAS DA API ---
 
 // 1. Rota GET para Produtos (Listagem)
@@ -112,3 +111,4 @@ app.post('/api/contatos', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
+
