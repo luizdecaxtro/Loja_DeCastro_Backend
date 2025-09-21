@@ -1,17 +1,17 @@
+// Adicione estes três imports se não estiverem lá
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const multer = require('multer');
 // imports de dependências
 const express = require('express');
 const app = express();
 const cors = require('cors');
 const { Produto, Contato } = require('./database'); // Importa os modelos do Sequelize
 
-// Imports do Cloudinary
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const multer = require('multer');
+// Imports de dados
+const { Produto, Contato } = require('./database'); // CRÍTICO: Importar os modelos Sequelize
 
-// ... (Restante do setup)
-
-// Configuração do Cloudinary (Usa variáveis de ambiente do Render)
+// Configuração do Cloudinary (Usando as variáveis de ambiente do Render)
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, // Ex: dkwvtzu9i
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -22,7 +22,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'lojadecastro', // Pasta no Cloudinary
+        folder: 'lojacastro', // Nome da pasta
         format: async (req, file) => 'jpg', 
         public_id: (req, file) => Date.now() + '-' + file.originalname,
     },
@@ -50,6 +50,8 @@ app.use('/uploads', express.static(uploadsPath)); // Mapeia /uploads para a past
 // --- ROTAS DA API ---
 
 
+
+
 // Rota para cadastrar novo produto
 app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
     try {
@@ -60,6 +62,7 @@ app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
         const { nome, preco, descricao } = req.body;
         const imagemUrl = req.file.path; // URL do Cloudinary
 
+        // CRÍTICO: Salva no PostgreSQL
         const novoProduto = await Produto.create({
             nome,
             preco: parseFloat(preco),
@@ -67,24 +70,10 @@ app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
             imagem: imagemUrl 
         });
 
-        res.status(201).json(novoProduto); // Retorna sucesso
+        res.status(201).json(novoProduto);
     } catch (error) {
         console.error("Erro ao cadastrar produto (Cloudinary/Sequelize):", error);
         res.status(500).send({ message: "Erro interno ao salvar o produto." });
-    }
-});
-
-app.get('/api/produtos/:id', async (req, res) => {
-    try {
-        const produtos = JSON.parse(await fs.readFile(produtosFilePath, 'utf8'));
-        const produto = produtos.find(p => p.id === parseInt(req.params.id));
-        if (!produto) {
-            return res.status(404).json({ message: 'Produto não encontrado.' });
-        }
-        res.json(produto);
-    } catch (error) {
-        console.error('Erro ao buscar produto por ID:', error);
-        res.status(500).json({ message: 'Erro ao buscar o produto.' });
     }
 });
 
@@ -133,6 +122,7 @@ app.post('/api/contatos', async (req, res) => {
     try {
         const { nome, email, telefone, mensagem } = req.body;
         
+        // CRÍTICO: Salva no PostgreSQL
         const novoContato = await Contato.create({
             nome,
             email,
