@@ -77,9 +77,11 @@ app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
 
         res.status(201).json(novoProduto);
     } catch (error) {
-        console.error("Erro ao cadastrar produto (Cloudinary/Sequelize):", error);
+   //     console.error("Erro ao cadastrar produto (Cloudinary/Sequelize):", error);
+        console.error("ERRO CRÍTICO NA ROTA DE PRODUTO:", error); 
         // Retorna o erro de salvamento
-        res.status(500).send({ message: "Erro ao salvar o produto." });
+  //      res.status(500).send({ message: "Erro ao salvar o produto." });
+        res.status(500).send({ message: "ERRO DE PRODUTO: VERIFIQUE O LOG DO RENDER" }); 
     }
 });
 
@@ -111,4 +113,5 @@ app.post('/api/contatos', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
+
 
