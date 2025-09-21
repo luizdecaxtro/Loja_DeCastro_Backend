@@ -88,13 +88,12 @@ app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
 // 3. Rota POST para Contatos (Cadastro com Sequelize)
 app.post('/api/contatos', async (req, res) => {
     try {
-        const { nome, email, telefone, mensagem } = req.body;
+        const { nome, email, mensagem } = req.body;
         
         // Salva os dados no PostgreSQL
         const novoContato = await Contato.create({
             nome,
             email,
-            telefone,
             mensagem
         });
 
@@ -115,6 +114,7 @@ app.post('/api/contatos', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
+
 
 
 
