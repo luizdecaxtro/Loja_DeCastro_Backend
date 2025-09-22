@@ -140,4 +140,3 @@ sequelize.sync({ alter: true })
 
 
 
-
