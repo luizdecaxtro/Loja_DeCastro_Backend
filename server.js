@@ -110,6 +110,38 @@ app.post('/api/contatos', async (req, res) => {
 
 });
 
+// Nova rotina de listagem de contatos
+
+
+// NOVO CÓDIGO A SER ADICIONADO/CORRIGIDO NO SEU server.js
+
+// 4. Rota GET para Contatos (Listagem)
+app.get('/api/contatos', async (req, res) => {
+    try {
+        // Busca todos os contatos no banco de dados (SQLite)
+        const contatos = await Contato.findAll({
+            // Opcional: Ordena pelos mais recentes
+            order: [['createdAt', 'DESC']] 
+        }); 
+        
+        // Retorna a lista de contatos como JSON
+        res.json(contatos); 
+
+    } catch (error) {
+        console.error("ERRO CRÍTICO NA ROTA GET /api/contatos:", error);
+        // Retorna um erro 500 para o Frontend
+        res.status(500).send({ message: "Erro ao carregar as mensagens de contato." });
+    }
+});
+
+// A rota POST já deve estar logo acima ou abaixo, não a remova!
+app.post('/api/contatos', async (req, res) => { /* ... */ });
+
+// ... (resto do server.js)
+
+// fim da última sequencia de códigos inderidads
+
+
 // --- INICIA O SERVIDOR ---
 // CRÍTICO: Garante que o banco sincronize ANTES do servidor aceitar conexões,
 // e usa { alter: true } para corrigir a coluna 'assunto' no PostgreSQL.
@@ -126,6 +158,7 @@ sequelize.sync({ alter: true }) // <--- ATENÇÃO: { alter: true } ESTÁ AQUI!
     });
 
 // Fim do server.js
+
 
 
 
