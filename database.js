@@ -1,20 +1,14 @@
+// database.js (Corrigido para usar SQLite)
+
+// 1. CORREÇÃO CRÍTICA: REINTRODUZ A IMPORTAÇÃO DO SEQUELIZE
 const { Sequelize, DataTypes } = require('sequelize');
 
-// A conexão agora usa a variável de ambiente DATABASE_URL do Render (PostgreSQL)
-// Se não encontrar, ele usa uma conexão local (apenas para teste local)
+// A conexão usará o sqlite:db.sqlite, pois o bloco de 'dialect: postgres' foi removido
 const DATABASE_URL = process.env.DATABASE_URL || 'sqlite:db.sqlite';
 
 const sequelize = new Sequelize(DATABASE_URL, {
-    // Configuração para uso do PostgreSQL no Render
-    dialect: 'postgres',
-    dialectOptions: {
-        ssl: {
-            require: true,
-            rejectUnauthorized: false
-        }
-    },
-    // O log do console ajuda a ver as consultas SQL
-    logging: false 
+    // 2. CORREÇÃO CRÍTICA: Apenas logging: false é necessário para o SQLite
+    logging: false // Mantenha esta linha DESCOMENTADA
 });
 
 // Define o modelo 'Produto'
@@ -49,6 +43,7 @@ const Contato = sequelize.define('Contato', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    // O campo 'assunto' está correto
     assunto: {
         type: DataTypes.STRING,
         allowNull: true
@@ -63,7 +58,8 @@ const Contato = sequelize.define('Contato', {
 // 'alter: true' altera as tabelas para corresponder aos modelos.
 sequelize.sync({ alter: true })
     .then(() => {
-        console.log("Banco de dados sincronizado (PostgreSQL) com sucesso!");
+        // Mude a mensagem para refletir o SQLite:
+        console.log("Banco de dados sincronizado (SQLite) com sucesso!");
     })
     .catch(err => {
         console.error("Erro ao sincronizar o banco de dados:", err);
@@ -75,4 +71,3 @@ module.exports = {
     Produto,
     Contato
 };
-
