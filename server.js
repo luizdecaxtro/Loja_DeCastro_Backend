@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
-const { Produto, Contato, sequelize } = require('./database'); // Importa modelos e Sequelize
+// const path = require('path'); // Não é necessário se não serve arquivos estáticos
+const { Produto, Contato, sequelize } = require('./database');
 
 // --- CLOUDINARY E MULTER CONFIGURAÇÃO ---
 const cloudinary = require('cloudinary').v2;
@@ -19,7 +19,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'lojacastro', // Pasta no Cloudinary
+        folder: 'lojacastro', 
         format: async (req, file) => 'jpg',
         public_id: (req, file) => Date.now() + '-' + file.originalname,
     },
@@ -29,18 +29,23 @@ const upload = multer({ storage: storage });
 
 // --- CONFIGURAÇÃO DO SERVIDOR ---
 const app = express();
-// Usa a porta do Render ou 3000 localmente
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors()); // Permite requisições do seu Frontend
-app.use(express.json()); // Processa JSON no corpo da requisição
-app.use(express.urlencoded({ extended: true })); // Processa dados de formulário
+app.use(cors()); 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// --- ARQUIVOS ESTÁTICOS DO FRONTEND ---
-// Esta linha serve o Frontend (se ele estiver na pasta 'public')
-const frontendPath = path.join(__dirname, 'public'); 
-app.use(express.static(frontendPath));
+// --- REMOÇÃO DO SERVIÇO DE ARQUIVOS ESTÁTICOS ---
+// REMOVIDO: Se o Frontend está no GitHub Pages, estas linhas não são necessárias aqui.
+// const frontendPath = path.join(__dirname, 'public'); 
+// app.use(express.static(frontendPath)); 
+
+// Rota de teste simples (Se você acessar a raiz do Render, ele apenas diz 'API online')
+app.get('/', (req, res) => {
+    res.send('API Loja DeCastro Backend Online');
+});
+
 
 // --- ROTAS DA API ---
 
@@ -63,9 +68,8 @@ app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
         }
 
         const { nome, preco, descricao } = req.body;
-        const imagemUrl = req.file.path; // URL do Cloudinary
+        const imagemUrl = req.file.path;
 
-        // Salva os dados no banco
         const novoProduto = await Produto.create({
             nome,
             preco: parseFloat(preco),
@@ -75,7 +79,7 @@ app.post('/api/produtos', upload.single('imagem'), async (req, res) => {
 
         res.status(201).json(novoProduto);
     } catch (error) {
-        console.error("ERRO CRÍTICO NA ROTA DE PRODUTO:", error); 
+        console.error("ERRO CRÍTICO NA ROTA POST /api/produtos:", error); 
         res.status(500).send({ message: "ERRO DE PRODUTO: VERIFIQUE O LOG DO RENDER" }); 
     }
 });
@@ -85,7 +89,6 @@ app.post('/api/contatos', async (req, res) => {
     try {
         const { nome, email, assunto, mensagem } = req.body;
         
-        // Salva os dados no SQLite
         const novoContato = await Contato.create({
             nome,
             email,
@@ -101,17 +104,14 @@ app.post('/api/contatos', async (req, res) => {
     }
 });
 
-// 4. Rota GET para Contatos (Listagem) - CORREÇÃO FINAL para o admin
+// 4. Rota GET para Contatos (Listagem)
 app.get('/api/contatos', async (req, res) => {
     try {
-        // Busca todos os contatos no banco de dados (SQLite)
         const contatos = await Contato.findAll({
-            // Garante que o campo 'assunto' seja incluído, se o Frontend precisar
             attributes: ['id', 'nome', 'email', 'assunto', 'mensagem', 'createdAt'],
-            order: [['createdAt', 'DESC']] // Ordena pelos mais recentes
+            order: [['createdAt', 'DESC']]
         }); 
         
-        // Retorna a lista de contatos como JSON
         res.json(contatos); 
 
     } catch (error) {
@@ -122,12 +122,9 @@ app.get('/api/contatos', async (req, res) => {
 
 
 // --- INICIA O SERVIDOR ---
-// A sincronização garante que o banco de dados (SQLite) esteja pronto antes de iniciar o servidor.
-
 sequelize.sync({ alter: true })
     .then(() => {
         app.listen(PORT, () => {
-            // CORREÇÃO: Altera a mensagem para refletir o SQLite
             console.log("Banco de dados sincronizado (SQLite) com sucesso!");
             console.log(`Servidor rodando na porta ${PORT}`);
         });
@@ -135,8 +132,3 @@ sequelize.sync({ alter: true })
     .catch(error => {
         console.error('Erro ao sincronizar o banco de dados:', error);
     });
-
-
-
-
-
