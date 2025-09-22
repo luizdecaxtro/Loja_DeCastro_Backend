@@ -111,10 +111,22 @@ app.post('/api/contatos', async (req, res) => {
 });
 
 // --- INICIA O SERVIDOR ---
-// A sincronização do banco de dados (sequelize.sync) já está no database.js
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+// CRÍTICO: Garante que o banco sincronize ANTES do servidor aceitar conexões,
+// e usa { alter: true } para corrigir a coluna 'assunto' no PostgreSQL.
+
+sequelize.sync({ alter: true }) // <--- ATENÇÃO: { alter: true } ESTÁ AQUI!
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log("Banco de dados sincronizado (PostgreSQL) com sucesso!");
+            console.log(`Servidor rodando na porta ${PORT}`);
+        });
+    })
+    .catch(error => {
+        console.error('Erro ao sincronizar o banco de dados:', error);
+    });
+
+// Fim do server.js
+
 
 
 
