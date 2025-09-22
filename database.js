@@ -49,7 +49,7 @@ const Contato = sequelize.define('Contato', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    telefone: {
+    assunto: {
         type: DataTypes.STRING,
         allowNull: true
     },
@@ -75,3 +75,4 @@ module.exports = {
     Produto,
     Contato
 };
+
